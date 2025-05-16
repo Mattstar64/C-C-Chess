@@ -5,6 +5,9 @@
 //retrieve the std
 using namespace std;
 
+#ifndef CHESSCLASS
+#define CHESSCLASS
+
 class Chesspiece {
     public:
     //constructor
@@ -42,3 +45,5 @@ class Chesspiece {
 
     
 };
+
+#endif
