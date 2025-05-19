@@ -8,12 +8,12 @@ using namespace std;
 
 class Movrules {
     public:
-        static bool isvalidmove(Chesspiece* piece, int x1, int y1, int x2, int y2, Chesspiece* board[8][8], bool t){
+        static bool isvalidmove(Chesspiece* piece, int x1, int y1, int x2, int y2, Chesspiece* board[8][8], bool t, bool silent){
 
         if(!piece) return false;
         Chesspiece* target = board[y2][x2];
         if (target && target->getTeam() == t) {
-            cout << "Cannot capture own piece!\n";
+            if (!silent) std::cout << "Cannot capture own piece!" << std::endl;
             return false;
         }
         string name = piece->getName();
@@ -22,10 +22,94 @@ class Movrules {
         if (name == "Knight") return isvalidknightmove(x1, y1, x2, y2, board, t);
         if (name == "Bishop") return isvalidbishopmove(x1, y1, x2, y2, board, t);
         if (name == "Queen")  return isvalidqueenmove(x1, y1, x2, y2, board, t);
-        if (name == "King")   return isvalidkingmove(x1, y1, x2, y2, board, t);
+        if (name == "King") {
+            if (!isvalidkingmove(x1, y1, x2, y2, board, t)) return false;
+
+            // Simulate the move
+            Chesspiece* captured = board[y2][x2];
+            board[y2][x2] = piece;
+            board[y1][x1] = nullptr;
+            int oldX = piece->getX(), oldY = piece->getY();
+            piece->setPosition(x2, y2);
+
+            // Check if king is in check after move
+            bool inCheck = iskingincheck(t, board);
+
+            // Undo the move
+            board[y1][x1] = piece;
+            board[y2][x2] = captured;
+            piece->setPosition(oldX, oldY);
+
+            if (inCheck) {
+                if (!silent) std::cout << "Move would put king in check!" << std::endl;
+                return false;
+            }
+
+            return true;
+        }
+
 
         return true;
         };
+        static bool iskingincheck(bool team, Chesspiece* board[8][8]) {
+            int kingX, kingY;
+
+            for (int y = 0; y < 8; y++) {
+                for (int x = 0; x < 8; x++) {
+                    Chesspiece* piece = board[y][x];
+                    if (piece && piece->getName() == "King" && piece->getTeam() == team) {
+                        kingX = x;
+                        kingY = y;
+                    }
+                }
+            }
+
+            for (int y = 0; y < 8; y++) {
+                for (int x = 0; x < 8; x++) {
+                    Chesspiece* attacker = board[y][x];
+                    if (attacker && attacker->getTeam() != team) {
+                        if (Movrules::isvalidmove(attacker, x, y, kingX, kingY, board, attacker->getTeam(), true)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            
+        return false;
+        };
+        static bool ischeckmate(bool team, Chesspiece* board[8][8]) {
+            if (!iskingincheck(team, board)) return false;
+
+            for (int y1 = 0; y1 < 8; ++y1) {
+                for (int x1 = 0; x1 < 8; ++x1) {
+                    Chesspiece* piece = board[y1][x1];
+                    if (!piece || piece->getTeam() != team) continue;
+
+                    for (int y2 = 0; y2 < 8; ++y2) {
+                        for (int x2 = 0; x2 < 8; ++x2) {
+                            if (!isvalidmove(piece, x1, y1, x2, y2, board, team, true)) continue;
+
+                            Chesspiece* captured = board[y2][x2];
+                            board[y2][x2] = piece;
+                            board[y1][x1] = nullptr;
+                            int oldX = piece->getX(), oldY = piece->getY();
+                            piece->setPosition(x2, y2);
+
+                            bool stillInCheck = iskingincheck(team, board);
+
+                            board[y1][x1] = piece;
+                            board[y2][x2] = captured;
+                            piece->setPosition(oldX, oldY);
+
+                            if (!stillInCheck) return false;
+                        }
+                    }
+                }
+            }
+
+            return true; // No escape
+        }
+
     private:
     static bool ispathclear(int x1, int y1, int x2, int y2, Chesspiece* board[8][8], bool t) {
     int dx = (x2 - x1) == 0 ? 0 : (x2 - x1) / abs(x2 - x1);
@@ -34,9 +118,7 @@ class Movrules {
     y1 += dy;
 
     while (x1 != x2 || y1 != y2) {
-        cout << "Checking square (" << x1 << ", " << y1 << ")\n";
         if (board[y1][x1] != nullptr) {
-            cout << "Blocked by: " << board[y1][x1]->getName() << " at (" << x1 << ", " << y1 << ")\n";
             return false;
         }
         x1 += dx;
@@ -57,12 +139,7 @@ class Movrules {
         } 
         else if (abs(x2 - x1) == 1 && y2 == y1 + direction) {
             Chesspiece* target = board[y2][x2];
-            cout << "Diagonal move check: from (" << x1 << "," << y1 << ") to (" << x2 << "," << y2 << ") ";
-            if (target) {
-            cout << "| Target: " << target->getName() << ", Team: " << target->getTeam() << ", Own Team: " << t << endl;
-            } else {
-                cout << "| No piece to capture.\n";
-    }
+            
     return target != nullptr && target->getTeam() != t;
 }
         else if (abs(x2 - x1) == 1 && y2 == y1 + direction) {
@@ -71,13 +148,14 @@ class Movrules {
 
         return false;
 }
-static bool isvalidrookmove(int x1, int y1, int x2, int y2, Chesspiece* board[8][8], bool t) {
+    static bool isvalidrookmove(int x1, int y1, int x2, int y2, Chesspiece* board[8][8], bool t) {
         if (x1 != x2 && y1 != y2) return false;
-        return ispathclear(x1, y1, x2, y2, board, t);
+        if (!ispathclear(x1, y1, x2, y2, board, t)) return false;
 
         Chesspiece* target = board[y2][x2];
         return target == nullptr || target->getTeam() != t;
-    }
+        }
+
 
     static bool isvalidknightmove(int x1, int y1, int x2, int y2, Chesspiece* board[8][8], bool t) {
         int dx = abs(x2 - x1);
@@ -90,23 +168,26 @@ static bool isvalidrookmove(int x1, int y1, int x2, int y2, Chesspiece* board[8]
 
     static bool isvalidbishopmove(int x1, int y1, int x2, int y2, Chesspiece* board[8][8], bool t) {
         if (abs(x2 - x1) != abs(y2 - y1)) return false;
-        return ispathclear(x1, y1, x2, y2, board, t);
+        if (!ispathclear(x1, y1, x2, y2, board, t)) return false;
 
         Chesspiece* target = board[y2][x2];
         return target == nullptr || target->getTeam() != t;
     }
+
 
     static bool isvalidqueenmove(int x1, int y1, int x2, int y2, Chesspiece* board[8][8], bool t) {
-        return isvalidrookmove(x1, y1, x2, y2, board, t) || isvalidbishopmove(x1, y1, x2, y2, board, t);
-
-        Chesspiece* target = board[y2][x2];
-        return target == nullptr || target->getTeam() != t;
+        bool valid = false;
+        if (x1 == x2 || y1 == y2) valid = isvalidrookmove(x1, y1, x2, y2, board, t);
+        else if (abs(x2 - x1) == abs(y2 - y1)) valid = isvalidbishopmove(x1, y1, x2, y2, board, t);
+        return valid;
     }
 
-    static bool isvalidkingmove(int x1, int y1, int x2, int y2,Chesspiece* board[8][8], bool t) {
-        return abs(x2 - x1) <= 1 && abs(y2 - y1) <= 1;
 
+    static bool isvalidkingmove(int x1, int y1, int x2, int y2, Chesspiece* board[8][8], bool t) {
+        if (abs(x2 - x1) > 1 || abs(y2 - y1) > 1) return false;
+        
         Chesspiece* target = board[y2][x2];
+        
         return target == nullptr || target->getTeam() != t;
     }
 };

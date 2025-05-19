@@ -70,7 +70,7 @@ void changeposition(int x1, int y1, int x2, int y2, bool t) {
         return;
     }
 
-    if (!Movrules::isvalidmove(piece, x1, y1, x2, y2, board, piece->getTeam())) {
+    if (!Movrules::isvalidmove(piece, x1, y1, x2, y2, board, piece->getTeam(), false)) {
     cout << "Invalid move for " << piece->getName() << endl;
     return;
 }
