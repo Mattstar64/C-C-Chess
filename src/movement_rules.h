@@ -8,49 +8,53 @@ using namespace std;
 
 class Movrules {
     public:
-        static bool isvalidmove(Chesspiece* piece, int x1, int y1, int x2, int y2, Chesspiece* board[8][8], bool t, bool silent){
+        static bool isvalidmove(Chesspiece* piece, int x1, int y1, int x2, int y2, Chesspiece* board[8][8], bool t, bool silent) {
+    
+    if (x1 < 0 || x1 > 7 || y1 < 0 || y1 > 7 || x2 < 0 || x2 > 7 || y2 < 0 || y2 > 7)
+        return false;
 
-        if(!piece) return false;
-        Chesspiece* target = board[y2][x2];
-        if (target && target->getTeam() == t) {
-            if (!silent) std::cout << "Cannot capture own piece!" << std::endl;
-            return false;
-        }
-        string name = piece->getName();
-        if (name == "Pawn")   return isvalidpawnmove(piece, x1, y1, x2, y2, board, t);
-        if (name == "Rook")   return isvalidrookmove(x1, y1, x2, y2, board, t);
-        if (name == "Knight") return isvalidknightmove(x1, y1, x2, y2, board, t);
-        if (name == "Bishop") return isvalidbishopmove(x1, y1, x2, y2, board, t);
-        if (name == "Queen")  return isvalidqueenmove(x1, y1, x2, y2, board, t);
-        if (name == "King") {
-            if (!isvalidkingmove(x1, y1, x2, y2, board, t)) return false;
+    
+    if (!piece) return false;
 
-            // Simulate the move
-            Chesspiece* captured = board[y2][x2];
-            board[y2][x2] = piece;
-            board[y1][x1] = nullptr;
-            int oldX = piece->getX(), oldY = piece->getY();
-            piece->setPosition(x2, y2);
+    Chesspiece* target = board[y2][x2];
+    if (target && target->getTeam() == t) {
+        if (!silent) std::cout << "Cannot capture own piece!" << std::endl;
+        return false;
+    }
 
-            // Check if king is in check after move
-            bool inCheck = iskingincheck(t, board);
+    // 4. Validate based on piece type
+    string name = piece->getName();
+    bool valid = false;
 
-            // Undo the move
-            board[y1][x1] = piece;
-            board[y2][x2] = captured;
-            piece->setPosition(oldX, oldY);
+    if (name == "Pawn")   valid = isvalidpawnmove(piece, x1, y1, x2, y2, board, t);
+    else if (name == "Rook")   valid = isvalidrookmove(x1, y1, x2, y2, board, t);
+    else if (name == "Knight") valid = isvalidknightmove(x1, y1, x2, y2, board, t);
+    else if (name == "Bishop") valid = isvalidbishopmove(x1, y1, x2, y2, board, t);
+    else if (name == "Queen")  valid = isvalidqueenmove(x1, y1, x2, y2, board, t);
+    else if (name == "King")   valid = isvalidkingmove(x1, y1, x2, y2, board, t);
 
-            if (inCheck) {
-                if (!silent) std::cout << "Move would put king in check!" << std::endl;
-                return false;
-            }
+    if (!valid) return false;
 
-            return true;
-        }
+    Chesspiece* captured = board[y2][x2];
+    board[y2][x2] = piece;
+    board[y1][x1] = nullptr;
+    int oldX = piece->getX(), oldY = piece->getY();
+    piece->setPosition(x2, y2);
 
+    bool inCheck = iskingincheck(t, board);
 
-        return true;
-        };
+    board[y1][x1] = piece;
+    board[y2][x2] = captured;
+    piece->setPosition(oldX, oldY);
+
+    if (inCheck) {
+        if (!silent) std::cout << "Move would put king in check!" << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
         static bool iskingincheck(bool team, Chesspiece* board[8][8]) {
             int kingX, kingY;
 
@@ -128,26 +132,25 @@ class Movrules {
     return true;
 }
 
-    static bool isvalidpawnmove(Chesspiece* piece, int x1, int y1, int x2, int y2, Chesspiece* board[8][8], bool t){
+    static bool isvalidpawnmove(Chesspiece* piece, int x1, int y1, int x2, int y2, Chesspiece* board[8][8], bool t) {
     int direction = t ? -1 : 1;
     bool startRow = (direction == 1 && y1 == 1) || (direction == -1 && y1 == 6);
 
-        if (x1 == x2) {
-            if (y2 == y1 + direction && board[y2][x2] == nullptr) return true;
-            if (startRow && y2 == y1 + 2 * direction && board[y1 + direction][x2] == nullptr && board[y2][x2] == nullptr)
-                return true;
-        } 
-        else if (abs(x2 - x1) == 1 && y2 == y1 + direction) {
-            Chesspiece* target = board[y2][x2];
-            
-    return target != nullptr && target->getTeam() != t;
+    if (x1 == x2) {
+        if (y2 == y1 + direction && board[y2][x2] == nullptr)
+            return true;
+        if (startRow && y2 == y1 + 2 * direction && board[y1 + direction][x2] == nullptr && board[y2][x2] == nullptr)
+            return true;
+    } 
+    
+    else if (abs(x2 - x1) == 1 && y2 == y1 + direction) {
+        Chesspiece* target = board[y2][x2];
+        return target != nullptr && target->getTeam() != t;
+    }
+    
+    return false;
 }
-        else if (abs(x2 - x1) == 1 && y2 == y1 + direction) {
-            if (board[y2][x2] != nullptr) return true;
-        }
 
-        return false;
-}
     static bool isvalidrookmove(int x1, int y1, int x2, int y2, Chesspiece* board[8][8], bool t) {
         if (x1 != x2 && y1 != y2) return false;
         if (!ispathclear(x1, y1, x2, y2, board, t)) return false;
@@ -184,7 +187,8 @@ class Movrules {
 
 
     static bool isvalidkingmove(int x1, int y1, int x2, int y2, Chesspiece* board[8][8], bool t) {
-        if (abs(x2 - x1) > 1 || abs(y2 - y1) > 1) return false;
+
+       if (abs(x2 - x1) > 1 || abs(y2 - y1) > 1) return false;
         
         Chesspiece* target = board[y2][x2];
         

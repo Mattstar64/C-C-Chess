@@ -3,6 +3,7 @@
 #include <iostream>
 using namespace std;
 
+
 int board_init[] = {
     4,2,3,5,6,3,2,4,
     1,1,1,1,1,1,1,1,
@@ -68,6 +69,25 @@ void changeposition(int x1, int y1, int x2, int y2, bool t) {
     if (!piece) {
         cout << "No piece at that position.\n";
         return;
+    }
+
+    if ((piece->getName()=="Pawn") && (y2 == (t ? 0 : 7))){
+        int newindex;
+    cout << "PROMOTION! Choose (2=Knight, 3=Bishop, 4=Rook, 5=Queen): ";
+    cin >> newindex;
+
+    if (board[y2][x2]) {
+        cout << "Captured: " << board[y2][x2]->getName() << endl;
+        delete board[y2][x2];
+    }
+
+    delete board[y1][x1];
+    piece = createPiece(newindex, x2, y2, t);
+    board[y2][x2] = piece;
+    board[y1][x1] = nullptr;
+    manager.addpiece(piece);
+    cout << "Pawn promoted and moved to (" << x2 << "," << y2 << ")\n";
+    return;
     }
 
     if (!Movrules::isvalidmove(piece, x1, y1, x2, y2, board, piece->getTeam(), false)) {

@@ -1,4 +1,4 @@
-#include "chess_board.h"
+#include "opponent.h"
 #include <iostream>
 
 int main() {
@@ -18,7 +18,18 @@ int main() {
         continue;
     }
 
+    bool team = selected->getTeam();
+    if (team == 0)
+    {
+        cout << "this isn't your piece !" << endl;
+        continue;
+    }
+
+    if (!Movrules::isvalidmove(selected, x1, y1, x2, y2, board, selected->getTeam(), false)){
+        continue;
+    }
     changeposition(x1, y1, x2, y2, team);
+    bestAImove(board);
     printboard();
 
     bool opponentTeam = !team;
