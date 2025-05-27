@@ -5,27 +5,27 @@ using namespace std;
 
 
 int board_init[] = {
-    4,2,3,5,6,3,2,4,
+    4,0,0,0,6,0,0,4,
     1,1,1,1,1,1,1,1,
     0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,
     1,1,1,1,1,1,1,1,
-    4,2,3,5,6,3,2,4
+    4,0,0,0,6,0,0,4
 };
 
 Chesspiece* board[8][8] = {nullptr};
 PieceManager manager;
 
-Chesspiece* createPiece(int index, int x, int y, bool t) {
+Chesspiece* createPiece(int index, int x, int y, bool t, bool m) {
     switch (index){
-        case 1: return new Chesspiece("Pawn", 1, " P ", x, y, t);
-        case 2: return new Chesspiece("Knight", 3, " C ", x, y, t);
-        case 3: return new Chesspiece("Bishop", 3, " B ", x, y, t);
-        case 4: return new Chesspiece("Rook", 5, " R ", x, y, t);
-        case 5: return new Chesspiece("Queen", 9, " Q ", x, y, t);
-        case 6: return new Chesspiece("King", 0, " K ", x, y, t);
+        case 1: return new Chesspiece("Pawn", 1, " P ", x, y, t, m);
+        case 2: return new Chesspiece("Knight", 3, " C ", x, y, t, m);
+        case 3: return new Chesspiece("Bishop", 3, " B ", x, y, t, m);
+        case 4: return new Chesspiece("Rook", 5, " R ", x, y, t, m);
+        case 5: return new Chesspiece("Queen", 9, " Q ", x, y, t, m);
+        case 6: return new Chesspiece("King", 0, " K ", x, y, t, m);
         default: return nullptr;
     }
 }
@@ -41,7 +41,7 @@ void setboard() {
                 if (y >= 6){
                     t = true;
                 }
-                Chesspiece* piece = createPiece(pieceCode, x, y, t);
+                Chesspiece* piece = createPiece(pieceCode, x, y, t, 0);
                 board[y][x] = piece;
                 cout << t << " ," << flush;
                 manager.addpiece(piece);
@@ -62,35 +62,48 @@ void printboard() {
         }
         cout << endl;
     }
+    cout << flush;
 }
 
-void changeposition(int x1, int y1, int x2, int y2, bool t) {
+void changeposition(int x1, int y1, int x2, int y2, bool t, bool m) {
+    cout << m << endl;
     Chesspiece* piece = board[y1][x1];
-    if (!piece) {
-        cout << "No piece at that position.\n";
-        return;
-    }
-
+    cout<<"checking if pawn"<<endl;
     if ((piece->getName()=="Pawn") && (y2 == (t ? 0 : 7))){
         int newindex;
-    cout << "PROMOTION! Choose (2=Knight, 3=Bishop, 4=Rook, 5=Queen): ";
-    cin >> newindex;
+        if((piece->getTeam()==1)){
+            cout << "PROMOTION! Choose (2=Knight, 3=Bishop, 4=Rook, 5=Queen): ";
+            cin >> newindex;
+        }
+        else{
+            newindex = 5;//TODO: opponent promotion
+        }
 
-    if (board[y2][x2]) {
-        cout << "Captured: " << board[y2][x2]->getName() << endl;
-        delete board[y2][x2];
+        if (board[y2][x2]) {
+            cout << "Captured: " << board[y2][x2]->getName() << endl;
+            delete board[y2][x2];
+        }
+
+        delete board[y1][x1];
+        piece = createPiece(newindex, x2, y2, t, 1);
+        board[y2][x2] = piece;
+        board[y1][x1] = nullptr;
+        manager.addpiece(piece);
+        cout << "Pawn promoted and moved to (" << x2 << "," << y2 << ")\n";
+        return;
+    }
+    
+    if (piece->getName()=="King"){
+        if (Movrules::cancastle(board,x1,y1,x2, y2, true, t)){
+            cout<< "can castle"<< endl;
+            Movrules::performcastle(board,x1,y1,x2, y2, true);
+            cout<<"castle success"<<endl;
+            return;
+        }
+        cout<<"no castle"<<endl;
     }
 
-    delete board[y1][x1];
-    piece = createPiece(newindex, x2, y2, t);
-    board[y2][x2] = piece;
-    board[y1][x1] = nullptr;
-    manager.addpiece(piece);
-    cout << "Pawn promoted and moved to (" << x2 << "," << y2 << ")\n";
-    return;
-    }
-
-    if (!Movrules::isvalidmove(piece, x1, y1, x2, y2, board, piece->getTeam(), false)) {
+    if (!Movrules::isvalidmove(piece, x1, y1, x2, y2, board, piece->getTeam(), false, m)) {
     cout << "Invalid move for " << piece->getName() << endl;
     return;
 }

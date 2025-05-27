@@ -49,7 +49,8 @@ vector<Move> getlegalmoves(bool team, Chesspiece* board[8][8]) {
             if (piece && piece->getTeam() == team) {
                 for (int ty = 0; ty < 8; ty++) {
                     for (int tx = 0; tx < 8; tx++) {
-                        if (Movrules::isvalidmove(piece, x, y, tx, ty, board, team, true)) {
+                        bool m = piece ->hasmoved();
+                        if (Movrules::isvalidmove(piece, x, y, tx, ty, board, team, true, m)) {
                             moves.push_back({x, y, tx, ty});
                         }
                     }
@@ -72,10 +73,10 @@ int minimax(Chesspiece* board[8][8], int depth, bool maximizingPlayer, int alpha
             Chesspiece* piece = board[y1][x1];
             if (!piece) continue;
             if (piece->getTeam() != (maximizingPlayer ? 0 : 1)) continue;
-
+            bool m = piece ->hasmoved();
             for (int y2 = 0; y2 < 8; ++y2) {
                 for (int x2 = 0; x2 < 8; ++x2) {
-                    if (!Movrules::isvalidmove(piece, x1, y1, x2, y2, board, piece->getTeam(), true)) continue;
+                    if (!Movrules::isvalidmove(piece, x1, y1, x2, y2, board, piece->getTeam(), true, m)) continue;
 
                     Chesspiece* captured = board[y2][x2];
                     board[y2][x2] = piece;
@@ -111,15 +112,16 @@ void bestAImove(Chesspiece* board[8][8]) {
     int bestScore = INT_MIN;
     int bestX1 = -1, bestY1 = -1, bestX2 = -1, bestY2 = -1;
     bool foundMove = false;
-
+    
     for (int y1 = 0; y1 < 8; ++y1) {
         for (int x1 = 0; x1 < 8; ++x1) {
             Chesspiece* piece = board[y1][x1];
+            bool m = piece ->hasmoved();
             if (!piece || piece->getTeam() != 0) continue;
 
             for (int y2 = 0; y2 < 8; ++y2) {
                 for (int x2 = 0; x2 < 8; ++x2) {
-                    if (!Movrules::isvalidmove(piece, x1, y1, x2, y2, board, 0, true)) continue;
+                    if (!Movrules::isvalidmove(piece, x1, y1, x2, y2, board, 0, true, m)) continue;
 
                     // Simulate move
                     Chesspiece* captured = board[y2][x2];
@@ -148,7 +150,7 @@ void bestAImove(Chesspiece* board[8][8]) {
 
     if (foundMove) {
         cout << "AI moves from (" << bestX1 << ", " << bestY1 << ") to (" << bestX2 << ", " << bestY2 << ")\n";
-        changeposition(bestX1, bestY1, bestX2, bestY2, 0);
+        changeposition(bestX1, bestY1, bestX2, bestY2, 0, true);
     } else {
         cout << "AI has no legal moves (Checkmate or Stalemate).\n";
     }

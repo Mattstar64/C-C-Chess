@@ -11,9 +11,9 @@ using namespace std;
 class Chesspiece {
     public:
     //constructor
-    Chesspiece () : name (""), points(0), sprite(""), position_x(0), position_y(0), team(0){}
-    Chesspiece( string n, int p, string s, int x, int y, bool t)
-    : name(n), points(p), sprite(s), position_x(x), position_y(y), team(t){}
+    Chesspiece () : name (""), points(0), sprite(""), position_x(0), position_y(0), team(0), moved(0){}
+    Chesspiece( string n, int p, string s, int x, int y, bool t, bool m)
+    : name(n), points(p), sprite(s), position_x(x), position_y(y), team(t), moved(m){}
 
     // Getters
     string getName() const { return name; }
@@ -22,6 +22,7 @@ class Chesspiece {
     int getX() const { return position_x; }
     int getY() const { return position_y; }
     bool getTeam() const {return team;}
+    bool hasmoved() const { return moved; }
 
     // Setters
     void setName(const  string& n) { name = n; }
@@ -32,6 +33,7 @@ class Chesspiece {
         position_y = y;
     }
     void setTeam(bool t) {team = t;}
+    void setmoved(bool m) { moved = m; }
 
     // display a piece
     void displaypiece(){
@@ -45,6 +47,7 @@ class Chesspiece {
     int position_x;
     int position_y;
     bool team;
+    bool moved;
 
     
 };

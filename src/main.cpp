@@ -17,7 +17,7 @@ int main() {
         cout << "No piece at that position." << endl;
         continue;
     }
-
+    bool m = selected ->hasmoved();
     bool team = selected->getTeam();
     if (team == 0)
     {
@@ -25,11 +25,14 @@ int main() {
         continue;
     }
 
-    if (!Movrules::isvalidmove(selected, x1, y1, x2, y2, board, selected->getTeam(), false)){
-        continue;
-    }
-    changeposition(x1, y1, x2, y2, team);
-    bestAImove(board);
+    
+    
+    if (board[y1][x1] != selected) {
+    continue;
+}
+
+    changeposition(x1, y1, x2, y2, team, m);
+    //bestAImove(board);
     printboard();
 
     bool opponentTeam = !team;
