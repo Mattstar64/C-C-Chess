@@ -145,10 +145,10 @@ class Movrules {
             if (x2 > x1){
                 return true;
             }
-            else if (x2 < x1){
+            else{
                 return false;
             }
-        }
+}
         static bool cancastle(Chesspiece* board[8][8], int x1, int y1, int x2, int y2, bool kingside, bool team) {
         if (iskingincheck(team, board)){
             cout << "it would put king in check !"<<endl;

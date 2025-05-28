@@ -8,16 +8,18 @@ int main() {
     int x1, y1, x2, y2;
     bool t;
     while (true) {
+        
     cout << "\nEnter move (x1 y1 x2 y2): ";
     cin >> x1 >> y1 >> x2 >> y2;
     if (x1 < 0) break;
 
     Chesspiece* selected = board[y1][x1];
+    bool m = selected ->hasmoved();
     if (!selected) {
         cout << "No piece at that position." << endl;
         continue;
     }
-    bool m = selected ->hasmoved();
+    
     bool team = selected->getTeam();
     if (team == 0)
     {
@@ -31,8 +33,10 @@ int main() {
     continue;
 }
 
-    changeposition(x1, y1, x2, y2, team, m);
-    //bestAImove(board);
+    
+    changeposition(x1, y1, x2, y2, true,m);
+    
+    bestAImove(board);
     printboard();
 
     bool opponentTeam = !team;

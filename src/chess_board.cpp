@@ -5,14 +5,14 @@ using namespace std;
 
 
 int board_init[] = {
-    4,0,0,0,6,0,0,4,
+    0,0,0,0,6,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
     1,1,1,1,1,1,1,1,
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-    1,1,1,1,1,1,1,1,
-    4,0,0,0,6,0,0,4
+    0,0,0,0,6,0,0,0
 };
 
 Chesspiece* board[8][8] = {nullptr};
@@ -111,10 +111,14 @@ void changeposition(int x1, int y1, int x2, int y2, bool t, bool m) {
     if (board[y2][x2]) {
         cout << "Captured: " << board[y2][x2]->getName() << endl;
         delete board[y2][x2];
+        board[y2][x2] = nullptr;
     }
+    
+
 
     board[y2][x2] = piece;
     board[y1][x1] = nullptr;
+    piece->setmoved(true);
     piece->setPosition(x2, y2);
     cout << "Moved to (" << x2 << "," << y2 << ")\n";
 }
