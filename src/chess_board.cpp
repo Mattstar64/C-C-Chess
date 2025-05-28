@@ -5,14 +5,14 @@ using namespace std;
 
 
 int board_init[] = {
-    0,0,0,0,6,0,0,0,
-    0,0,0,0,0,0,0,0,
+    4,2,3,5,6,3,2,4,
+    1,1,1,1,1,1,1,1,
     0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,
     1,1,1,1,1,1,1,1,
-    0,0,0,0,6,0,0,0
+    4,2,3,5,6,3,2,4
 };
 
 Chesspiece* board[8][8] = {nullptr};
@@ -68,7 +68,7 @@ void printboard() {
 void changeposition(int x1, int y1, int x2, int y2, bool t, bool m) {
     cout << m << endl;
     Chesspiece* piece = board[y1][x1];
-    cout<<"checking if pawn"<<endl;
+
     if ((piece->getName()=="Pawn") && (y2 == (t ? 0 : 7))){
         int newindex;
         if((piece->getTeam()==1)){
@@ -95,7 +95,6 @@ void changeposition(int x1, int y1, int x2, int y2, bool t, bool m) {
     
     if (piece->getName()=="King"){
         if (Movrules::cancastle(board,x1,y1,x2, y2, true, t)){
-            cout<< "can castle"<< endl;
             Movrules::performcastle(board,x1,y1,x2, y2, true);
             cout<<"castle success"<<endl;
             return;
